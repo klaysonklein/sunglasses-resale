@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#0a0a0b"/>
+<title>Grok — Workspaces</title>
+<style>
+:root{--bg:#0a0a0b;--bg2:#121214;--bg3:#1a1a1e;--line:#2a2a30;--txt:#f4f4f5;--mute:#8b8b96;--dim:#5c5c66;--green:#5dcc8a;--amber:#e8b86d;--safe-b:env(safe-area-inset-bottom,12px)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;height:100dvh;background:#000;color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif}
+button,input{font:inherit;color:inherit;background:none;border:0}
+.phone{max-width:430px;margin:0 auto;height:100dvh;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.status{display:flex;align-items:center;justify-content:space-between;padding:12px 22px 0;height:48px;font-size:14px;font-weight:600}
+.notch{width:96px;height:22px;background:#000;border-radius:14px}
+.top{display:flex;align-items:center;gap:10px;padding:6px 16px 10px}
+.word{font-size:22px;font-weight:700;letter-spacing:-.4px}
+.sub{font-size:11px;color:var(--mute)}
+.icon-btn{width:36px;height:36px;border-radius:10px;background:var(--bg3);font-size:24px}
+main{flex:1;overflow-y:auto;padding:0 16px 12px;-webkit-overflow-scrolling:touch}
+.tabbar{margin:8px 12px calc(10px + var(--safe-b));display:flex;align-items:center;background:rgba(22,22,26,.96);border:1px solid var(--line);border-radius:22px;padding:8px 6px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--dim);font-weight:600}
+.tab.on{color:var(--txt)}
+.tab.plus{width:48px;height:48px;flex:0 0 48px;border-radius:16px;background:var(--txt);color:#111;font-size:26px}
+.search,.row,.stat,.eye-card,.space-card{background:var(--bg2);border:1px solid var(--line);border-radius:14px}
+.search{display:flex;gap:8px;padding:10px 12px;margin-bottom:12px}
+.search input{flex:1;outline:none}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px}
+.chip{flex-shrink:0;padding:7px 12px;border-radius:999px;background:var(--bg3);border:1px solid var(--line);font-size:12px;color:var(--mute)}
+.chip.on{background:var(--txt);color:#111}
+.section{font-size:12px;color:var(--mute);font-weight:600;text-transform:uppercase;margin:8px 0}
+.space-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.space-card{padding:14px;min-height:120px;text-align:left}
+.space-card h3{font-size:15px}
+.space-card p{font-size:12px;color:var(--mute);margin-top:4px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.stat{padding:12px}
+.stat .k{font-size:11px;color:var(--mute)}
+.stat .v{font-size:16px;font-weight:700;margin-top:4px}
+.eye-card{padding:12px;margin-bottom:8px;text-align:left;width:100%}
+.nm{font-weight:700}
+.md{font-size:12px;color:var(--mute);margin-top:2px;word-break:break-word}
+.price3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+.price3 div{background:#16161c;border:1px solid var(--line);border-radius:10px;padding:8px}
+.price3 em{display:block;font-style:normal;font-size:10px;color:var(--mute)}
+.pilepill{font-size:11px;font-weight:800;border-radius:999px;padding:3px 8px}
+.A{background:rgba(93,204,138,.15);color:var(--green)}
+.B{background:rgba(232,184,109,.15);color:var(--amber)}
+.note{display:none;margin-top:8px;font-size:13px;color:#d4d4da;line-height:1.35}
+.eye-card.open .note{display:block}
+.row{display:flex;gap:12px;padding:12px;margin-bottom:8px;align-items:center}
+.avatar{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#222228}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status"><span id="clock">02:33</span><span class="notch"></span><span style="font-size:12px;color:var(--mute)">86%</span></div>
+  <header class="top">
+    <button class="icon-btn" id="back" hidden>‹</button>
+    <div style="flex:1"><div class="word">Grok</div><div class="sub" id="sub">Workspaces</div></div>
+  </header>
+  <main id="screen"></main>
+  <nav class="tabbar">
+    <button class="tab on" data-t="chats">✦<div>Chats</div></button>
+    <button class="tab" data-t="spaces">▣<div>Spaces</div></button>
+    <button class="tab plus" data-t="eye">+</button>
+    <button class="tab" data-t="eye">◔<div>Stock</div></button>
+    <button class="tab" data-t="spaces">●<div>More</div></button>
+  </nav>
+</div>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const EYE=[
+{brand:"Judith Leiber",model:"JC1144 (095 60-16-130)",gender:"Female",pile:"A",low:65,high:100,mid:83,ask:99,quick:60,best:"eBay",note:"Crystal/fashion. Used 65–100. Do not chase 150."},
+{brand:"Judith Leiber",model:"JL1034 (52-20-135)",gender:"Female",pile:"A",low:70,high:105,mid:88,ask:110,quick:65,best:"eBay",note:"Case + clean crystals = top of range."},
+{brand:"Gucci",model:"GG1014/S (R1LNM 54-18-140)",gender:"Female / Unisex",pile:"A",low:85,high:130,mid:108,ask:139,quick:80,best:"eBay",note:"Strongest brand. No case or scratch drops price."},
+{brand:"Armani Exchange",model:"AX237/F/S (3M1CC 61-14-130)",gender:"Unisex / Male",pile:"B",low:28,high:50,mid:39,ask:49,quick:25,best:"eBay",note:"Old $75 is too high. Sold at $29."},
+{brand:"Polo Ralph Lauren",model:"PH6530 (60-14-135)",gender:"Male / Unisex",pile:"B",low:40,high:70,mid:55,ask:75,quick:35,best:"eBay",note:"Name helps a little vs Tommy."},
+{brand:"Calvin Klein",model:"CK1815S (717 57-16-140)",gender:"Female",pile:"B",low:30,high:55,mid:43,ask:55,quick:28,best:"eBay",note:"Common. Bundle if it sits."},
+{brand:"Tommy Hilfiger",model:"TH1279/S (FEQ3R 54-18-145)",gender:"Male / Unisex",pile:"B",low:28,high:45,mid:37,ask:45,quick:25,best:"Carousell MY",note:"Five Tommys as one lot."},
+{brand:"Tommy Hilfiger",model:"TH1295/S (TO8HD 59-15-140)",gender:"Male / Unisex",pile:"B",low:28,high:45,mid:37,ask:45,quick:25,best:"Carousell MY",note:"Same band."},
+{brand:"Tommy Hilfiger",model:"TH1044/S (U7DF1 60-12-135)",gender:"Male",pile:"B",low:28,high:45,mid:37,ask:45,quick:25,best:"Carousell MY",note:"Same band."},
+{brand:"Tommy Hilfiger",model:"TH1150/S (PH8OX 60-16-140)",gender:"Male / Unisex",pile:"B",low:28,high:45,mid:37,ask:45,quick:25,best:"Carousell MY",note:"Same band."},
+{brand:"Tommy Hilfiger",model:"TH104 / TH1044 (U70F1 60-12-135)",gender:"Male",pile:"B",low:28,high:45,mid:37,ask:45,quick:25,best:"Carousell MY",note:"May be the same as TH1044."},
+{brand:"MAX&Co.",model:"MM600/S (3X6 59-11)",gender:"Female",pile:"B",low:40,high:65,mid:53,ask:69,quick:35,best:"eBay",note:"Not Max Mara main line."},
+{brand:"MAX&Co.",model:"MM148/S (877EU 56-17-130)",gender:"Female",pile:"B",low:38,high:62,mid:50,ask:65,quick:32,best:"eBay",note:"Same tier."},
+{brand:"MAX&Co.",model:"MM132/S (VMOD8 58-14-140)",gender:"Female",pile:"B",low:38,high:65,mid:52,ask:68,quick:32,best:"eBay",note:"Same tier."},
+{brand:"Carrera",model:"Champion / Champion/S",gender:"Unisex",pile:"A",low:55,high:110,mid:83,ask:99,quick:50,best:"eBay",note:"Best Carrera. Case + color = 90–110."},
+{brand:"Carrera",model:"5007/F/S (58-14-140)",gender:"Female",pile:"B",low:45,high:75,mid:60,ask:75,quick:40,best:"eBay",note:"Do not price as Champion."},
+{brand:"Carrera",model:"Orzha (61-12-140)",gender:"Female / Unisex",pile:"B",low:45,high:80,mid:63,ask:79,quick:40,best:"eBay",note:"Fashion Carrera."},
+{brand:"Just Cavalli",model:"JC073/S (COL 731, 64-12-125)",gender:"Female",pile:"B",low:40,high:70,mid:55,ask:69,quick:35,best:"eBay",note:"Not Roberto Cavalli money."},
+{brand:"Roberto Cavalli",model:"Attamente / RC3225 (197, 67-12-115)",gender:"Female",pile:"A",low:80,high:125,mid:103,ask:129,quick:75,best:"eBay",note:"Statement oversized."},
+{brand:"Roberto Cavalli",model:"Antigone / RC311 (T28, 65-14-120)",gender:"Female",pile:"A",low:95,high:140,mid:118,ask:149,quick:90,best:"eBay",note:"Top piece with Gucci."},
+{brand:"Roberto Cavalli",model:"Antigone / RC311 (T24, 65-14-120)",gender:"Female",pile:"A",low:95,high:140,mid:118,ask:149,quick:90,best:"eBay",note:"Same model as T28."}
+];
+const FX={USD:1,MYR:4.06,ILS:3.04,THB:32.7};
+const FAC={USD:1,MYR:1,ILS:.92,THB_A:.82,THB_B:.65};
+const SYM={USD:"$",MYR:"RM",ILS:"₪",THB:"฿"};
+const SP=[
+  {id:"eye",name:"Designer eyewear",ico:"▣",desc:"21 pairs · realistic resale"},
+  {id:"songs",name:"Night Shift album",ico:"♪",desc:"Lyrics, style prompts, Suno"},
+  {id:"housing",name:"Housing Asia",ico:"⌂",desc:"Penang vs KL, monthly stays"},
+  {id:"brand",name:"KLEYN brand",ico:"◈",desc:"Portraits, reels, likeness rules"}
+];
+let tab="eye", cur="USD", pile="ALL", q="";
+const fac=it=>cur==="THB"?(it.pile==="A"?FAC.THB_A:FAC.THB_B):FAC[cur];
+const money=(usd,it)=>{const n=Math.round(usd*FX[cur]*fac(it));return cur==="USD"?"$"+n:cur==="MYR"?"RM"+n:cur==="ILS"?"₪"+n:"฿"+n.toLocaleString("en-US")};
+const sumfmt=n=>(cur==="USD"?"$":SYM[cur])+n.toLocaleString("en-US");
+function render(){
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===tab||(tab==="eye"&&b.dataset.t==="eye")));
+  $("#back").hidden=true;
+  if(tab==="spaces") return spaces();
+  if(tab==="chats") return chats();
+  stock();
+}
+function stock(){
+  $("#sub").textContent="Designer eyewear";
+  const list=EYE.filter(it=>(pile==="ALL"||it.pile===pile)&&(it.brand+" "+it.model).toLowerCase().includes(q));
+  const tot=k=>Math.round(list.reduce((s,i)=>s+i[k]*FX[cur]*fac(i),0));
+  $("#screen").innerHTML=`
+    <div class="chips">${["USD","MYR","ILS","THB"].map(c=>`<button class="chip ${cur===c?"on":""}" data-c="${c}">${c}</button>`).join("")}</div>
+    <div class="chips">
+      <button class="chip ${pile==="ALL"?"on":""}" data-p="ALL">All</button>
+      <button class="chip ${pile==="A"?"on":""}" data-p="A">Pile A</button>
+      <button class="chip ${pile==="B"?"on":""}" data-p="B">Pile B</button>
+    </div>
+    <div class="search"><span>⌕</span><input id="eq" placeholder="Search brand or model" value="${q}"></div>
+    <div class="stat-grid">
+      <div class="stat"><div class="k">Mid</div><div class="v">${list.length?sumfmt(tot("mid")):"—"}</div></div>
+      <div class="stat"><div class="k">Ask</div><div class="v">${list.length?sumfmt(tot("ask")):"—"}</div></div>
+      <div class="stat"><div class="k">Quick</div><div class="v">${list.length?sumfmt(tot("quick")):"—"}</div></div>
+    </div>
+    ${list.map(it=>`
+      <button class="eye-card">
+        <div style="display:flex;justify-content:space-between;gap:8px">
+          <div><div class="nm">${it.brand}</div><div class="md">${it.model}</div></div>
+          <span class="pilepill ${it.pile}">Pile ${it.pile}</span>
+        </div>
+        <div class="price3">
+          <div><em>Mid</em><b>${money(it.mid,it)}</b></div>
+          <div><em>Ask</em><b>${money(it.ask,it)}</b></div>
+          <div><em>Quick</em><b>${money(it.quick,it)}</b></div>
+        </div>
+        <div class="md" style="margin-top:8px">${it.best} · ${it.gender}</div>
+        <div class="note">${it.note}<br>Range ${money(it.low,it)}–${money(it.high,it)}</div>
+      </button>`).join("")}`;
+  document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{cur=b.dataset.c;render()});
+  document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{pile=b.dataset.p;render()});
+  const eq=$("#eq");
+  if(eq){eq.oninput=e=>{q=e.target.value.toLowerCase();render();const n=$("#eq");if(n){n.focus();n.setSelectionRange(q.length,q.length)}};}
+  document.querySelectorAll(".eye-card").forEach(b=>b.onclick=()=>b.classList.toggle("open"));
+}
+function spaces(){
+  $("#sub").textContent="Project workspaces";
+  $("#screen").innerHTML=`<div class="section">Pinned work</div><div class="space-grid">${SP.map(s=>`<button class="space-card" data-s="${s.id}"><div style="font-size:22px">${s.ico}</div><h3>${s.name}</h3><p>${s.desc}</p></button>`).join("")}</div>`;
+  document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{tab=b.dataset.s==="eye"?"eye":"chats";render()});
+}
+function chats(){
+  $("#sub").textContent="All conversations";
+  $("#screen").innerHTML=`
+    <div class="row"><div class="avatar">▣</div><div><h3 style="font-size:15px">Eyewear pricing</h3><p class="md">21 pairs ready to list</p></div></div>
+    <div class="row"><div class="avatar">♪</div><div><h3 style="font-size:15px">Nothing Compares — bridge</h3><p class="md">Hold the last line quieter.</p></div></div>
+    <div class="row"><div class="avatar">⌂</div><div><h3 style="font-size:15px">George Town 1-month</h3><p class="md">Three listings under 2300 all-in.</p></div></div>`;
+  document.querySelectorAll(".row")[0].onclick=()=>{tab="eye";render()};
+}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
+const d=new Date();$("#clock").textContent=d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:false});
+render();
+</script>
+</body>
+</html>
