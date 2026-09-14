@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0b0c10" />
+  <title>Sunglasses resale</title>
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card: #14161c;
+      --card2: #1b1e26;
+      --line: #2a2e38;
+      --text: #f3efe6;
+      --dim: #9aa0ab;
+      --a: #3dd68c;
+      --b: #e0b04a;
+      --bad: #e06b6b;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { padding: calc(12px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom)); max-width: 640px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.03em; }
+    .sub { color: var(--dim); font-size: 12px; margin-bottom: 14px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    button.chip {
+      border: 1px solid var(--line); background: var(--card); color: var(--text);
+      border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 600;
+    }
+    button.chip.on { background: var(--text); color: #111; }
+    button.chip.a.on { background: var(--a); color: #062; }
+    button.chip.b.on { background: var(--b); color: #3a2a00; }
+    .totals { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 8px 0 14px; }
+    .tot { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
+    .tot b { display: block; font-size: 16px; }
+    .tot span { color: var(--dim); font-size: 11px; }
+    input {
+      width: 100%; background: var(--card); border: 1px solid var(--line); color: var(--text);
+      border-radius: 12px; padding: 11px 12px; font-size: 15px; margin-bottom: 12px;
+    }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; margin-bottom: 10px; }
+    .top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .brand { font-weight: 700; font-size: 15px; }
+    .model { color: var(--dim); font-size: 12px; margin-top: 2px; word-break: break-word; }
+    .pile { font-size: 11px; font-weight: 800; border-radius: 999px; padding: 3px 8px; white-space: nowrap; }
+    .pile.A { background: rgba(61,214,140,.15); color: var(--a); }
+    .pile.B { background: rgba(224,176,74,.15); color: var(--b); }
+    .prices { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .p { background: var(--card2); border-radius: 10px; padding: 8px; }
+    .p em { display: block; color: var(--dim); font-style: normal; font-size: 10px; }
+    .p b { font-size: 14px; }
+    .meta { margin-top: 8px; color: var(--dim); font-size: 12px; }
+    .note { display: none; margin-top: 8px; font-size: 13px; line-height: 1.35; color: #ddd6c6; }
+    .card.open .note { display: block; }
+    .old { color: var(--bad); font-size: 11px; }
+    footer { color: var(--dim); font-size: 11px; margin-top: 18px; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <h1>Sunglasses resale</h1>
+  <div class="sub">21 pairs · realistic prices · tap a card for the note</div>
+  <div class="row" id="cur"></div>
+  <div class="row" id="flt"></div>
+  <input id="q" placeholder="Search brand or model" />
+  <div class="totals">
+    <div class="tot"><span>Mid</span><b id="tMid">—</b></div>
+    <div class="tot"><span>Ask</span><b id="tAsk">—</b></div>
+    <div class="tot"><span>Quick sale</span><b id="tQuick">—</b></div>
+  </div>
+  <div id="list"></div>
+  <footer>Tap Share in Safari → Add to Home Screen to keep this on your phone.</footer>
+<script>
+const FX = { USD: 1, MYR: 4.06, ILS: 3.04, THB: 32.7 };
+const FACTOR = { USD: 1, MYR: 1, ILS: 0.92, THB_A: 0.82, THB_B: 0.65 };
+const SYM = { USD: "$", MYR: "RM", ILS: "₪", THB: "฿" };
+const ITEMS = [
+  {brand:"Judith Leiber", model:"JC1144 (095 60-16-130)", gender:"Female", pile:"A", low:65, high:100, mid:83, ask:99, quick:60, best:"eBay", note:"Crystal/fashion frame. Used comps 65–100. Do not chase 150."},
+  {brand:"Judith Leiber", model:"JL1034 (52-20-135)", gender:"Female", pile:"A", low:70, high:105, mid:88, ask:110, quick:65, best:"eBay", note:"Case + clean crystals = top of range."},
+  {brand:"Gucci", model:"GG1014/S (R1LNM 54-18-140)", gender:"Female / Unisex", pile:"A", low:85, high:130, mid:108, ask:139, quick:80, best:"eBay", note:"Strongest brand here. No case or lens scratch drops the price."},
+  {brand:"Armani Exchange", model:"AX237/F/S (3M1CC 61-14-130)", gender:"Unisex / Male", pile:"B", low:28, high:50, mid:39, ask:49, quick:25, best:"eBay", note:"Old 75 is too high. An AX237/S sold at $29."},
+  {brand:"Polo Ralph Lauren", model:"PH6530 (60-14-135)", gender:"Male / Unisex", pile:"B", low:40, high:70, mid:55, ask:75, quick:35, best:"eBay", note:"Name helps a little vs Tommy. Still mass fashion."},
+  {brand:"Calvin Klein", model:"CK1815S (717 57-16-140)", gender:"Female", pile:"B", low:30, high:55, mid:43, ask:55, quick:28, best:"eBay", note:"Common. Bundle if it sits."},
+  {brand:"Tommy Hilfiger", model:"TH1279/S (FEQ3R 54-18-145)", gender:"Male / Unisex", pile:"B", low:28, high:45, mid:37, ask:45, quick:25, best:"Carousell MY", note:"Five Tommys as one lot. Do not list all five at 55 and wait."},
+  {brand:"Tommy Hilfiger", model:"TH1295/S (TO8HD 59-15-140)", gender:"Male / Unisex", pile:"B", low:28, high:45, mid:37, ask:45, quick:25, best:"Carousell MY", note:"Same band."},
+  {brand:"Tommy Hilfiger", model:"TH1044/S (U7DF1 60-12-135)", gender:"Male", pile:"B", low:28, high:45, mid:37, ask:45, quick:25, best:"Carousell MY", note:"Same band."},
+  {brand:"Tommy Hilfiger", model:"TH1150/S (PH8OX 60-16-140)", gender:"Male / Unisex", pile:"B", low:28, high:45, mid:37, ask:45, quick:25, best:"Carousell MY", note:"Same band."},
+  {brand:"Tommy Hilfiger", model:"TH104 / TH1044 (U70F1 60-12-135)", gender:"Male", pile:"B", low:28, high:45, mid:37, ask:45, quick:25, best:"Carousell MY", note:"May be the same as TH1044. Check before listing twice."},
+  {brand:"MAX&Co.", model:"MM600/S (3X6 59-11)", gender:"Female", pile:"B", low:40, high:65, mid:53, ask:69, quick:35, best:"eBay", note:"Not the Max Mara main line."},
+  {brand:"MAX&Co.", model:"MM148/S (877EU 56-17-130)", gender:"Female", pile:"B", low:38, high:62, mid:50, ask:65, quick:32, best:"eBay", note:"Same tier."},
+  {brand:"MAX&Co.", model:"MM132/S (VMOD8 58-14-140)", gender:"Female", pile:"B", low:38, high:65, mid:52, ask:68, quick:32, best:"eBay", note:"Same tier."},
+  {brand:"Carrera", model:"Champion / Champion/S", gender:"Unisex", pile:"A", low:55, high:110, mid:83, ask:99, quick:50, best:"eBay", note:"Best Carrera on the list. Case + strong color = 90–110."},
+  {brand:"Carrera", model:"5007/F/S (58-14-140)", gender:"Female", pile:"B", low:45, high:75, mid:60, ask:75, quick:40, best:"eBay", note:"Do not price this as Champion."},
+  {brand:"Carrera", model:"Orzha (61-12-140)", gender:"Female / Unisex", pile:"B", low:45, high:80, mid:63, ask:79, quick:40, best:"eBay", note:"Fashion Carrera, not the icon."},
+  {brand:"Just Cavalli", model:"JC073/S (COL 731, 64-12-125)", gender:"Female", pile:"B", low:40, high:70, mid:55, ask:69, quick:35, best:"eBay", note:"Diffusion line. Not Roberto Cavalli money."},
+  {brand:"Roberto Cavalli", model:"Attamente / RC3225 (197, 67-12-115)", gender:"Female", pile:"A", low:80, high:125, mid:103, ask:129, quick:75, best:"eBay", note:"Statement oversized. Second-best money after Antigone + Gucci."},
+  {brand:"Roberto Cavalli", model:"Antigone / RC311 (T28, 65-14-120)", gender:"Female", pile:"A", low:95, high:140, mid:118, ask:149, quick:90, best:"eBay", note:"Top piece with Gucci. Sell the better color first."},
+  {brand:"Roberto Cavalli", model:"Antigone / RC311 (T24, 65-14-120)", gender:"Female", pile:"A", low:95, high:140, mid:118, ask:149, quick:90, best:"eBay", note:"Same model as T28."}
+];
+let cur = "USD", pile = "ALL", q = "";
+function factor(item) {
+  if (cur === "THB") return item.pile === "A" ? FACTOR.THB_A : FACTOR.THB_B;
+  return FACTOR[cur];
+}
+function money(usd, item) {
+  const n = Math.round(usd * FX[cur] * factor(item));
+  if (cur === "USD") return "$" + n;
+  if (cur === "MYR") return "RM" + n;
+  if (cur === "ILS") return "₪" + n;
+  return "฿" + n.toLocaleString("en-US");
+}
+function filtered() {
+  return ITEMS.filter(it => {
+    if (pile !== "ALL" && it.pile !== pile) return false;
+    return (it.brand + " " + it.model).toLowerCase().includes(q);
+  });
+}
+function renderChips() {
+  document.getElementById("cur").innerHTML = ["USD","MYR","ILS","THB"].map(c =>
+    `<button class="chip ${c===cur?"on":""}" onclick="setCur('${c}')">${c}</button>`
+  ).join("");
+  document.getElementById("flt").innerHTML = [["ALL","All"],["A","Pile A"],["B","Pile B"]].map(([k,l]) =>
+    `<button class="chip ${k} ${pile===k?"on":""}" onclick="setPile('${k}')">${l}</button>`
+  ).join("");
+}
+function render() {
+  renderChips();
+  const list = filtered();
+  const sum = key => Math.round(list.reduce((s,i)=>s+i[key]*FX[cur]*factor(i),0));
+  const fmtSum = n => (cur==="USD"?"$":SYM[cur]) + n.toLocaleString("en-US");
+  document.getElementById("tMid").textContent = list.length ? fmtSum(sum("mid")) : "—";
+  document.getElementById("tAsk").textContent = list.length ? fmtSum(sum("ask")) : "—";
+  document.getElementById("tQuick").textContent = list.length ? fmtSum(sum("quick")) : "—";
+  document.getElementById("list").innerHTML = list.map(it => `
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="top">
+        <div>
+          <div class="brand">${it.brand}</div>
+          <div class="model">${it.model}</div>
+        </div>
+        <div class="pile ${it.pile}">Pile ${it.pile}</div>
+      </div>
+      <div class="prices">
+        <div class="p"><em>Mid</em><b>${money(it.mid,it)}</b></div>
+        <div class="p"><em>Ask</em><b>${money(it.ask,it)}</b></div>
+        <div class="p"><em>Quick</em><b>${money(it.quick,it)}</b></div>
+      </div>
+      <div class="meta">${it.best} · ${it.gender}</div>
+      <div class="note">${it.note}<br><span class="old">Range ${money(it.low,it)}–${money(it.high,it)}</span></div>
+    </div>`).join("");
+}
+function setCur(c){ cur=c; render(); }
+function setPile(p){ pile=p; render(); }
+document.getElementById("q").addEventListener("input", e => { q = e.target.value.toLowerCase(); render(); });
+render();
+</script>
+</body>
+</html>
